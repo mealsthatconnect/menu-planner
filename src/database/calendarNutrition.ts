@@ -3,13 +3,7 @@ import Combo from "./ComboSchema";
 import Recipe from "./RecipeSchema";
 import { RECIPE_BUCKETS } from "@/lib/types";
 import type { Nutrition, RecipeBuckets } from "@/lib/types";
-import {
-  NutritionSummary,
-  emptyNutrition,
-  isNutritionQuotaMet,
-  normalizeNutrition,
-  sumNutrition,
-} from "@/lib/nutrition";
+import { NutritionSummary, emptyNutrition, normalizeNutrition, sumNutrition } from "@/lib/nutrition";
 
 type BucketDoc = {
   _id: string;
@@ -83,7 +77,6 @@ export async function getCalendarNutritionSummaries(dateIds: string[]): Promise<
     return {
       _id: dateId,
       nutritional_info: total,
-      quotaMet: isNutritionQuotaMet(total),
     };
   });
 }

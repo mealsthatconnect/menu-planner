@@ -1,5 +1,5 @@
-import WeeklyMenu from "@/components/WeeklyMenu";
-import SummaryCard from "@/components/SummaryCard";
+import WeeklyMenu from "@/components/menuPlanning/WeeklyMenu";
+import SummaryCard from "@/components/shared/SummaryCard";
 import { auth } from "@clerk/nextjs/server";
 import dbConnect from "@/database/db";
 import User from "@/database/UserSchema";
@@ -25,7 +25,6 @@ export default async function Home() {
           {/* Right – Summary Cards */}
           <div className="flex flex-col gap-4">
             <SummaryCard title="Meals Planned Summary" labelSuffix="Meals Planned" metric="mealsPlanned" />
-            <SummaryCard title="Nutrition Summary" labelSuffix="Meals Met Nutrition Quota" metric="nutritionMet" />
           </div>
         </div>
       </div>

@@ -3,9 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DroppableCalendarArea from "./DroppableCalendarArea";
 import MonthMealCard from "./MonthMealCard";
-import WarningQuotaMonthly from "@/components/WarningQuotaMonthly";
 import { RECIPE_BUCKETS } from "@/lib/types";
-import type { NutritionSummary } from "@/lib/nutrition";
 import type { CalendarDay, RecipeNutritionOnly } from "@/lib/types";
 
 const MOBILE_WEEKDAY_LABELS = ["MON", "TUE", "WED", "THU", "FRI"] as const;
@@ -15,7 +13,6 @@ type Props = {
   /** In-month dates only (1..last day). */
   monthDates: Date[];
   dateToday: Date;
-  nutritionByDate?: Record<string, NutritionSummary>;
   refetchTrigger?: number;
   /** Calendar day picked in month view; used when switching to week/day on the parent. */
   selectedDate: Date | null;
@@ -79,7 +76,6 @@ function getVisibleDesktopMonthMeals(meals: RecipeNutritionOnly[]) {
 export default function MonthView({
   monthDates,
   dateToday,
-  nutritionByDate = {},
   refetchTrigger,
   selectedDate,
   onDaySelect,
@@ -193,8 +189,6 @@ export default function MonthView({
                 const isDaySelected = selectedDate ? isSameCalendarDay(date, selectedDate) : false;
                 const meals = mealsByDayId[dayId] ?? [];
                 const { visibleMeals, hiddenCount } = getVisibleMobileMonthMeals(meals);
-                const nutritionSummary = nutritionByDate[dayId];
-                const showWarning = Boolean(nutritionSummary) && !nutritionSummary?.quotaMet;
 
                 const cellContent = (
                   <div className="flex h-full min-h-12 flex-col justify-end gap-1 pt-4 sm:min-h-16">
@@ -246,12 +240,6 @@ export default function MonthView({
                     aria-pressed={isDaySelected}
                     title="Click to select this day"
                   >
-                    {userRole && showWarning ? (
-                      <div className="absolute top-0.5 left-0.5 z-10 origin-top-left scale-75">
-                        <WarningQuotaMonthly />
-                      </div>
-                    ) : null}
-
                     <span className="absolute top-1 right-1 z-10 font-montserrat text-[10px] font-semibold text-dark-gray sm:text-xs">
                       {String(date.getDate()).padStart(2, "0")}
                     </span>
@@ -295,8 +283,6 @@ export default function MonthView({
                 const isDaySelected = selectedDate ? isSameCalendarDay(date, selectedDate) : false;
                 const meals = mealsByDayId[dayId] ?? [];
                 const { visibleMeals, hiddenCount } = getVisibleDesktopMonthMeals(meals);
-                const nutritionSummary = nutritionByDate[dayId];
-                const showWarning = !weekend && Boolean(nutritionSummary) && !nutritionSummary?.quotaMet;
 
                 const cellContent = (
                   <div className="flex min-h-22.5 flex-col items-start gap-1 p-2 pt-5">
@@ -352,12 +338,6 @@ export default function MonthView({
                     aria-pressed={weekend ? undefined : isDaySelected}
                     title={weekend ? "Weekends — not available for planning or selection." : "Click to select this day"}
                   >
-                    {userRole && showWarning ? (
-                      <div className="absolute top-2 left-2 z-10">
-                        <WarningQuotaMonthly />
-                      </div>
-                    ) : null}
-
                     <span className="absolute top-2 right-2 z-10 font-montserrat text-sm font-normal text-dark-gray">
                       {String(date.getDate()).padStart(2, "0")}
                     </span>

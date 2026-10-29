@@ -1,8 +1,8 @@
 "use client";
 
-import NutritionalInfo from "@/components/NutrionalInfo";
+import NutritionalInfo from "@/components/recipe/NutrionalInfo";
 import { NUTRIENT_LABELS, Nutrition } from "@/lib/types";
-import { emptyNutrition, sumNutrition } from "@/lib/nutrition";
+import { DAILY_NUTRITION_GOALS, emptyNutrition, sumNutrition } from "@/lib/nutrition";
 
 interface DailyNutritionSummaryProps {
   recipes?: Nutrition[];
@@ -16,7 +16,7 @@ export default function DailyNutritionSummary({ recipes = [], total }: DailyNutr
     <div className="mt-4 rounded-xl border border-pepper/20 bg-white p-4">
       <h3 className="mb-3 font-montserrat text-base font-semibold text-pepper">Daily Nutrition Totals</h3>
       <div className="flex flex-wrap gap-2">
-        {NUTRIENT_LABELS.map(({ key, label, unit }) => (
+        {NUTRIENT_LABELS.map(({ key, label, unit, isQuotaReference }) => (
           <NutritionalInfo
             key={key}
             label={label}
@@ -24,6 +24,7 @@ export default function DailyNutritionSummary({ recipes = [], total }: DailyNutr
             value={String(totals[key] ?? 0)}
             onChange={() => {}}
             readOnly
+            max={isQuotaReference ? DAILY_NUTRITION_GOALS[key] : undefined}
           />
         ))}
       </div>
