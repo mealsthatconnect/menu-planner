@@ -64,39 +64,13 @@ type SubrecipeRow = {
   quantity: number | "";
 };
 
-type NutritionFormState = {
-  calories: string;
-  protein: string;
-  fatPercentage: string;
-  saturatedFatPercentage: string;
-  fiber: string;
-  calcium: string;
-  magnesium: string;
-  potassium: string;
-  sodium: string;
-  vitaminA: string;
-  vitaminD: string;
-  vitaminC: string;
-  vitaminB12: string;
-};
+type NutritionFormState = Record<keyof Nutrition, string>;
 
 type RecipeWithNutrition = RecipeMinimal & { nutritional_info: Nutrition };
 
-const EMPTY_NUTRITION_FORM: NutritionFormState = {
-  calories: "",
-  protein: "",
-  fatPercentage: "",
-  saturatedFatPercentage: "",
-  fiber: "",
-  calcium: "",
-  magnesium: "",
-  potassium: "",
-  sodium: "",
-  vitaminA: "",
-  vitaminD: "",
-  vitaminC: "",
-  vitaminB12: "",
-};
+const EMPTY_NUTRITION_FORM: NutritionFormState = Object.fromEntries(
+  NUTRIENT_LABELS.map(({ key }) => [key, ""]),
+) as NutritionFormState;
 
 function isRecipeItem(item: EditableItem): item is Recipe {
   return "category" in item;
@@ -380,21 +354,11 @@ export default function CreateRecipePopUp({ item, open, onClose, recipeType, edi
         );
 
         const ni = item.nutritional_info;
-        setNutrition({
-          calories: ni.calories?.toString() ?? "",
-          protein: ni.protein?.toString() ?? "",
-          fatPercentage: ni.fatPercentage?.toString() ?? "",
-          saturatedFatPercentage: ni.saturatedFatPercentage?.toString() ?? "",
-          fiber: ni.fiber?.toString() ?? "",
-          calcium: ni.calcium?.toString() ?? "",
-          magnesium: ni.magnesium?.toString() ?? "",
-          potassium: ni.potassium?.toString() ?? "",
-          sodium: ni.sodium?.toString() ?? "",
-          vitaminA: ni.vitaminA?.toString() ?? "",
-          vitaminD: ni.vitaminD?.toString() ?? "",
-          vitaminC: ni.vitaminC?.toString() ?? "",
-          vitaminB12: ni.vitaminB12?.toString() ?? "",
-        });
+        setNutrition(
+          Object.fromEntries(
+            NUTRIENT_LABELS.map(({ key }) => [key, ni[key] != null ? String(ni[key]) : ""]),
+          ) as NutritionFormState,
+        );
       } else if (isCombo && !isRecipeItem(item)) {
         setSelectedEntree(toRecipeWithNutrition(item.entrees));
         setSelectedVegetables(toRecipeWithNutrition(item.vegetables));
@@ -602,22 +566,9 @@ export default function CreateRecipePopUp({ item, open, onClose, recipeType, edi
           instructions: instructionsText,
           notes: notes,
           isDraft,
-          nutritional_info: {
-            calories: nutrition.calories !== "" ? Number(nutrition.calories) : 0,
-            protein: nutrition.protein !== "" ? Number(nutrition.protein) : 0,
-            fatPercentage: nutrition.fatPercentage !== "" ? Number(nutrition.fatPercentage) : 0,
-            saturatedFatPercentage:
-              nutrition.saturatedFatPercentage !== "" ? Number(nutrition.saturatedFatPercentage) : 0,
-            fiber: nutrition.fiber !== "" ? Number(nutrition.fiber) : 0,
-            calcium: nutrition.calcium !== "" ? Number(nutrition.calcium) : 0,
-            magnesium: nutrition.magnesium !== "" ? Number(nutrition.magnesium) : 0,
-            potassium: nutrition.potassium !== "" ? Number(nutrition.potassium) : 0,
-            sodium: nutrition.sodium !== "" ? Number(nutrition.sodium) : 0,
-            vitaminA: nutrition.vitaminA !== "" ? Number(nutrition.vitaminA) : 0,
-            vitaminD: nutrition.vitaminD !== "" ? Number(nutrition.vitaminD) : 0,
-            vitaminC: nutrition.vitaminC !== "" ? Number(nutrition.vitaminC) : 0,
-            vitaminB12: nutrition.vitaminB12 !== "" ? Number(nutrition.vitaminB12) : 0,
-          },
+          nutritional_info: Object.fromEntries(
+            NUTRIENT_LABELS.map(({ key }) => [key, nutrition[key] !== "" ? Number(nutrition[key]) : 0]),
+          ) as Nutrition,
           ...(imageUrl ? { imageUrl } : {}),
         };
         console.log("Payload:", payload);

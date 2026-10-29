@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ReactNode } from "react";
+import { useUser } from "@clerk/nextjs";
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useDroppable } from "@dnd-kit/core";
 import WeekView from "@/components/menuPlanning/WeekView";
 import RecipeDatabase from "@/components/menuPlanning/RecipeDatabase";
@@ -195,8 +196,14 @@ export default function MenuPlanning() {
   const previousCalendarView = useRef(calendarView);
 
   const [userRole, setUserRole] = useState<string | null>(null);
+  const { isSignedIn } = useUser();
 
   useEffect(() => {
+    if (!isSignedIn) {
+      setUserRole(null);
+      return;
+    }
+
     async function getUserRole() {
       try {
         const response = await fetch("/api/users/me");
@@ -211,7 +218,7 @@ export default function MenuPlanning() {
       }
     }
     getUserRole();
-  }, []);
+  }, [isSignedIn]);
 
   useEffect(() => {
     const prev = previousCalendarView.current;
@@ -255,7 +262,7 @@ export default function MenuPlanning() {
   };
 
   useEffect(() => {
-    if (!viewDateKey) {
+    if (!userRole || !viewDateKey) {
       setNutritionByDate({});
       return;
     }
@@ -294,7 +301,7 @@ export default function MenuPlanning() {
     }
     fetchNutrition();
     return () => controller.abort();
-  }, [viewDateKey, recipeDropTrigger]);
+  }, [viewDateKey, recipeDropTrigger, userRole]);
 
   const downloadMonthlyMenu = async () => {
     const baseDate = viewDates[0] ?? planningRoot;
@@ -523,7 +530,6 @@ export default function MenuPlanning() {
                 <MonthView
                   monthDates={viewDates}
                   dateToday={today}
-                  nutritionByDate={nutritionByDate}
                   refetchTrigger={recipeDropTrigger}
                   selectedDate={pickedDateFromMonth}
                   onDaySelect={setPickedDateFromMonth}
@@ -545,7 +551,6 @@ export default function MenuPlanning() {
                   weekDates={viewDates}
                   refetchTrigger={recipeDropTrigger}
                   selectedDate={pickedDateFromMonth}
-                  nutritionByDate={nutritionByDate}
                   userRole={userRole}
                 />
 

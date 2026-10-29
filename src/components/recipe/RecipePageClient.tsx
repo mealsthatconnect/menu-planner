@@ -13,6 +13,7 @@ import {
   RecipePreview,
 } from "@/lib/types";
 import { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { useMealData } from "@/hooks/useMealData";
 import { Recipe, Combo } from "@/lib/types";
 import { SlidersHorizontal } from "lucide-react";
@@ -40,8 +41,14 @@ export default function RecipePageClient() {
   const [activeType, setActiveType] = useState<CategoryDisplayType | null>(null);
 
   const [userRole, setUserRole] = useState<string | null>(null);
+  const { isSignedIn } = useUser();
 
   useEffect(() => {
+    if (!isSignedIn) {
+      setUserRole(null);
+      return;
+    }
+
     async function getUserRole() {
       try {
         const response = await fetch("/api/users/me");
@@ -56,8 +63,7 @@ export default function RecipePageClient() {
       }
     }
     getUserRole();
-    console.log("User role set to:", userRole);
-  }, []);
+  }, [isSignedIn]);
 
   async function getRecipe(id: string): Promise<Recipe> {
     const res = await fetch(`/api/recipes/${id}`);

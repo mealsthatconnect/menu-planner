@@ -4,12 +4,14 @@ function NutritionalInfo({
   value,
   onChange,
   readOnly,
+  max,
 }: {
   label: string;
   unit: string;
   value: string;
   onChange: (v: string) => void;
   readOnly: boolean;
+  max?: number;
 }) {
   return (
     <div className="w-27.5 rounded-lg border border-pepper/20 bg-white px-2 py-2">
@@ -27,6 +29,9 @@ function NutritionalInfo({
       </div>
 
       <div className="mt-1 text-center text-xs font-montserrat font-semibold text-pepper/80">{label}</div>
+      {max != null ? (
+        <div className="text-center text-[10px] font-montserrat font-medium text-pepper/40">of {max}</div>
+      ) : null}
     </div>
   );
 }

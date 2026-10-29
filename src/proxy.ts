@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/menuPlanning(.*)", "/recipe(.*)"]);
 
@@ -14,6 +15,14 @@ export default clerkMiddleware(async (auth, request) => {
       /^\/api\/combos(\/.*)?$/.test(pathname))
   ) {
     return;
+  }
+
+  // Logged-out visitors land on the public weekly menu instead of the sign-in wall.
+  if (pathname === "/") {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.redirect(new URL("/menuPlanning", request.url));
+    }
   }
 
   if (!isPublicRoute(request)) {

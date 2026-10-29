@@ -25,7 +25,6 @@ export default async function Home() {
           {/* Right – Summary Cards */}
           <div className="flex flex-col gap-4">
             <SummaryCard title="Meals Planned Summary" labelSuffix="Meals Planned" metric="mealsPlanned" />
-            <SummaryCard title="Nutrition Summary" labelSuffix="Meals Met Nutrition Quota" metric="nutritionMet" />
           </div>
         </div>
       </div>

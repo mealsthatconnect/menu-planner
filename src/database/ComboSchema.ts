@@ -1,6 +1,6 @@
 import { PROTEIN_SOURCES } from "@/lib/types";
 import mongoose, { Schema } from "mongoose";
-import Nutrition from "./NutritionSchema";
+import NutritionSchema from "./NutritionSchema";
 
 const ComboSchema = new Schema(
   {
@@ -71,7 +71,7 @@ const ComboSchema = new Schema(
       default: true,
     },
 
-    nutritional_info: { type: Nutrition.schema, required: true, default: () => ({}) },
+    nutritional_info: { type: NutritionSchema, required: true, default: () => ({}) },
   },
   {
     timestamps: true,

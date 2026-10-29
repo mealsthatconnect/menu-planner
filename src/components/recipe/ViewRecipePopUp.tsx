@@ -27,6 +27,7 @@ import type {
   RecipeCategory,
   SubrecipeIngredient,
 } from "@/lib/types";
+import { emptyNutrition, scaleNutrition, sumNutrition } from "@/lib/nutrition";
 import { ArrowLeft, Maximize2, Pencil, Tag, CircleAlert, SquarePen, Minus, Plus, ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import NutritionalInfo from "./NutrionalInfo";
@@ -40,64 +41,10 @@ type Props = {
   userRole: string | null;
 };
 
-function emptyNutrition(): Nutrition {
-  return {
-    calories: 0,
-    protein: 0,
-    fatPercentage: 0,
-    saturatedFatPercentage: 0,
-    fiber: 0,
-    calcium: 0,
-    magnesium: 0,
-    potassium: 0,
-    sodium: 0,
-    vitaminA: 0,
-    vitaminD: 0,
-    vitaminC: 0,
-    vitaminB12: 0,
-  };
-}
-
 type ServingsValue = number | "";
 
 function toPositiveServings(servings: ServingsValue) {
   return typeof servings === "number" && servings > 0 ? servings : 1;
-}
-
-function scaleNutrition(nutrition: Nutrition, multiplier: number): Nutrition {
-  return {
-    calories: (nutrition.calories || 0) * multiplier,
-    protein: (nutrition.protein || 0) * multiplier,
-    fatPercentage: (nutrition.fatPercentage || 0) * multiplier,
-    saturatedFatPercentage: (nutrition.saturatedFatPercentage || 0) * multiplier,
-    fiber: (nutrition.fiber || 0) * multiplier,
-    calcium: (nutrition.calcium || 0) * multiplier,
-    magnesium: (nutrition.magnesium || 0) * multiplier,
-    potassium: (nutrition.potassium || 0) * multiplier,
-    sodium: (nutrition.sodium || 0) * multiplier,
-    vitaminA: (nutrition.vitaminA || 0) * multiplier,
-    vitaminD: (nutrition.vitaminD || 0) * multiplier,
-    vitaminC: (nutrition.vitaminC || 0) * multiplier,
-    vitaminB12: (nutrition.vitaminB12 || 0) * multiplier,
-  };
-}
-
-function addNutrition(a: Nutrition, b: Nutrition): Nutrition {
-  return {
-    calories: a.calories + b.calories,
-    protein: a.protein + b.protein,
-    fatPercentage: a.fatPercentage + b.fatPercentage,
-    saturatedFatPercentage: a.saturatedFatPercentage + b.saturatedFatPercentage,
-    fiber: a.fiber + b.fiber,
-    calcium: a.calcium + b.calcium,
-    magnesium: a.magnesium + b.magnesium,
-    potassium: a.potassium + b.potassium,
-    sodium: a.sodium + b.sodium,
-    vitaminA: a.vitaminA + b.vitaminA,
-    vitaminD: a.vitaminD + b.vitaminD,
-    vitaminC: a.vitaminC + b.vitaminC,
-    vitaminB12: a.vitaminB12 + b.vitaminB12,
-  };
 }
 
 function formatNutritionValue(value: number, originalServings: number, servings: ServingsValue) {
@@ -118,7 +65,7 @@ function getComboNutrition(comboRecipes: RecipeBuckets<Recipe>, comboServing: nu
     const recipeServing = Math.max(1, recipe.serving || 1);
     const recipeNutrition = recipe.nutritional_info ?? emptyNutrition();
 
-    return addNutrition(total, scaleNutrition(recipeNutrition, 1 / recipeServing));
+    return sumNutrition([total, scaleNutrition(recipeNutrition, 1 / recipeServing)]);
   }, emptyNutrition());
 
   return scaleNutrition(nutritionPerServing, Math.max(1, comboServing));

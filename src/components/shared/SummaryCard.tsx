@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { MONTHS } from "@/lib/types";
-import type { NutritionSummary } from "@/lib/nutrition";
 
 interface DonutChartProps {
   value: number;
@@ -50,7 +49,7 @@ interface SummaryCardProps {
   value?: number;
   total?: number;
   labelSuffix: string;
-  metric?: "mealsPlanned" | "nutritionMet";
+  metric?: "mealsPlanned";
 }
 
 type CalendarSummaryDay = {
@@ -90,19 +89,6 @@ async function getCalendarDays(year: number, monthIndex: number, signal: AbortSi
   return (await response.json()) as CalendarSummaryDay[];
 }
 
-async function getNutritionSummaries(dateIds: string[], signal: AbortSignal) {
-  if (dateIds.length === 0) return [];
-
-  const response = await fetch(`/api/calendar/nutrition?ids=${encodeURIComponent(dateIds.join(","))}`, { signal });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch dashboard nutrition summary (${response.status})`);
-  }
-
-  const body: { data?: NutritionSummary[] } = await response.json();
-  return body.data ?? [];
-}
-
 export default function SummaryCard({ title, value = 0, total = 0, labelSuffix, metric }: SummaryCardProps) {
   const currentMonthIndex = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -128,15 +114,7 @@ export default function SummaryCard({ title, value = 0, total = 0, labelSuffix, 
             value: plannedDateIds.length,
             total: getDaysInMonth(currentYear, selectedMonth),
           });
-          return;
         }
-
-        const nutritionSummaries = await getNutritionSummaries(plannedDateIds, controller.signal);
-
-        setCounts({
-          value: nutritionSummaries.filter((summary) => summary.quotaMet).length,
-          total: plannedDateIds.length,
-        });
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") return;
         console.error("Error loading dashboard summary:", error);

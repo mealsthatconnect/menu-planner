@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useClerk, useUser, SignInButton } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
 import { UserRole } from "@/lib/types";
 
@@ -23,6 +23,11 @@ export default function Navbar() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isSignedIn) {
+      setUserRole(null);
+      return;
+    }
+
     async function getUserRole() {
       try {
         const response = await fetch("/api/users/me");
@@ -37,7 +42,7 @@ export default function Navbar() {
       }
     }
     getUserRole();
-  }, []);
+  }, [isSignedIn]);
 
   // cync user to DB on sign-in and fetch their role
   useEffect(() => {
@@ -133,7 +138,7 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   setUserRole(null);
-                  signOut({ redirectUrl: "/sign-in" });
+                  signOut({ redirectUrl: "/menuPlanning" });
                 }}
                 className="w-full rounded-lg px-4 py-3 text-left text-sm font-medium text-pepper hover:bg-light-gray transition-colors"
               >
@@ -142,19 +147,10 @@ export default function Navbar() {
             </div>
           )}
         </div>
-      ) : (
-        <div>
-          {/*<div className="relative hidden md:block" ref={dropdownRef}>
-          <SignInButton mode="modal">
-            <button
-              type="button"
-              className="flex items-center gap-3 rounded-lg border border-medium-gray px-4 py-2 hover:bg-light-gray transition-colors cursor-pointer"
-            >
-              Sign In
-            </button>
-          </SignInButton>
-        </div>*/}
-        </div>
+      ) : pathname.startsWith("/sign-in") ? null : (
+        <Link href="/sign-in" className="hidden text-sm text-pepper/45 transition-colors hover:text-pepper md:block">
+          Staff
+        </Link>
       )}
 
       {/* Hamburger Icon for mobile */}
@@ -220,7 +216,7 @@ export default function Navbar() {
                   <button
                     onClick={() => {
                       setUserRole(null);
-                      signOut({ redirectUrl: "/sign-in" });
+                      signOut({ redirectUrl: "/menuPlanning" });
                       setDrawerOpen(false);
                       setMobileDropdownOpen(false);
                     }}
@@ -231,20 +227,14 @@ export default function Navbar() {
                 </div>
               )}
             </div>
-          ) : (
-            <div>
-              {/*<div className="mt-auto flex flex-col gap-2" ref={mobileDropdownRef}>
-              <SignInButton mode="modal">
-                <button
-                  type="button"
-                  onClick={() => setDrawerOpen(false)}
-                  className="w-full rounded-lg px-3 py-2 text-xs font-medium text-pepper border border-medium-gray hover:bg-light-gray transition-colors"
-                >
-                  Sign In
-                </button>
-              </SignInButton>
-            </div>*/}
-            </div>
+          ) : pathname.startsWith("/sign-in") ? null : (
+            <Link
+              href="/sign-in"
+              className="mt-auto text-sm text-pepper/45 transition-colors hover:text-pepper"
+              onClick={() => setDrawerOpen(false)}
+            >
+              Staff
+            </Link>
           )}
         </div>
       </div>

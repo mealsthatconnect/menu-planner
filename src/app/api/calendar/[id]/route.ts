@@ -23,7 +23,6 @@ type CalendarRecipePreview = {
 type CalendarDayResponse = {
   _id: string;
   nutritional_info: Nutrition;
-  quotaMet: boolean;
 } & RecipeBuckets<CalendarRecipePreview>;
 
 const populateBucketPaths = RECIPE_BUCKETS.map((bucket) => ({
@@ -71,7 +70,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
       {
         ...calendarDay,
         nutritional_info: nutritionSummary?.nutritional_info ?? normalizeNutrition(calendarDay.nutritional_info),
-        quotaMet: nutritionSummary?.quotaMet ?? false,
       },
       { status: 200 },
     );
