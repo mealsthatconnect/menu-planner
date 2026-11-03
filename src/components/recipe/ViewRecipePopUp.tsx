@@ -187,7 +187,7 @@ function RecipeDetails({
 
       <MealFiltersSection item={recipe} />
 
-      {recipe.notes ? (
+      {userRole && recipe.notes ? (
         <LabeledSection label="Notes" icon={<SquarePen />}>
           <p>{recipe.notes}</p>
         </LabeledSection>
@@ -261,7 +261,7 @@ function ComboDetails({
 
       <MealFiltersSection item={combo} />
 
-      {combo.notes ? (
+      {userRole && combo.notes ? (
         <LabeledSection label="Notes" icon={<SquarePen />}>
           <p>{combo.notes}</p>
         </LabeledSection>

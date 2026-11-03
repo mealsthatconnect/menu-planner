@@ -1,5 +1,6 @@
 import connectDB from "@/database/db";
 import Recipe from "@/database/RecipeSchema";
+import { requireStaffEditor } from "@/lib/server/authz";
 import { getCleanName, isDuplicateNameError, nameFieldError } from "@/lib/server/comboHelpers";
 import { getNormalizedParams } from "@/lib/server/searchParams";
 import { DIETARY_KEYS, EXCLUSION_KEYS, PROTEIN_SOURCES, RECIPE_CATEGORIES } from "@/lib/types";
@@ -162,6 +163,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const authz = await requireStaffEditor();
+  if (!authz.ok) return authz.response;
+
   let recipeData: Record<string, unknown>;
 
   try {

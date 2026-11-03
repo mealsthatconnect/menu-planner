@@ -1,7 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/menuPlanning(.*)", "/recipe(.*)"]);
+// Keep /menu distinct from /menuPlanning — "/menu(.*)" would also match the planner.
+const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/menu", "/menu/(.*)", "/recipe(.*)"]);
 
 export default clerkMiddleware(async (auth, request) => {
   const { method, url } = request;
@@ -17,11 +18,19 @@ export default clerkMiddleware(async (auth, request) => {
     return;
   }
 
-  // Logged-out visitors land on the public weekly menu instead of the sign-in wall.
+  // Logged-out visitors land on the public menu viewer.
   if (pathname === "/") {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.redirect(new URL("/menuPlanning", request.url));
+      return NextResponse.redirect(new URL("/menu", request.url));
+    }
+  }
+
+  // /menuPlanning is staff-only; guests go to the public viewer.
+  if (pathname.startsWith("/menuPlanning")) {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.redirect(new URL("/menu", request.url));
     }
   }
 

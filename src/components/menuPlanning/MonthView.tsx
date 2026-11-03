@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DroppableCalendarArea from "./DroppableCalendarArea";
 import MonthMealCard from "./MonthMealCard";
+import { canEditCalendar as roleCanEditCalendar } from "@/lib/menuCalendar";
 import { RECIPE_BUCKETS } from "@/lib/types";
 import type { CalendarDay, RecipeNutritionOnly } from "@/lib/types";
 
@@ -83,6 +84,7 @@ export default function MonthView({
 }: Props) {
   const [mealsByDayId, setMealsByDayId] = useState<Record<string, RecipeNutritionOnly[]>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const canEditCalendar = roleCanEditCalendar(userRole);
 
   const focusDate = monthDates[0] ?? new Date();
   const year = focusDate.getFullYear();
@@ -247,6 +249,7 @@ export default function MonthView({
                     <DroppableCalendarArea
                       dayId={dayId}
                       droppableId={`mobile-${dayId}`}
+                      disabled={!canEditCalendar}
                       className="flex h-full w-full flex-col justify-end rounded-md p-1.5 transition-colors"
                     >
                       {cellContent}
@@ -345,7 +348,7 @@ export default function MonthView({
                     {weekend ? (
                       cellContent
                     ) : (
-                      <DroppableCalendarArea dayId={dayId} droppableId={`desktop-${dayId}`}>
+                      <DroppableCalendarArea dayId={dayId} droppableId={`desktop-${dayId}`} disabled={!canEditCalendar}>
                         {cellContent}
                       </DroppableCalendarArea>
                     )}

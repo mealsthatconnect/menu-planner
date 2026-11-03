@@ -8,13 +8,15 @@ import DailyNutritionSummary from "./DailyNutritionSummary";
 import RecipeSeeMorePopover from "./RecipeSeeMorePopover";
 import { CATEGORY_DISPLAY_MAP, CATEGORY_TO_BUCKET, RECIPE_BUCKETS, TAG_STYLES } from "@/lib/types";
 import type { Nutrition, RecipeBuckets, RecipeNutritionOnly } from "@/lib/types";
-import type { CalendarDragData } from "@/app/menuPlanning/page";
+import type { CalendarDragData } from "@/components/menuPlanning/dndTypes";
+import { canEditCalendar as roleCanEditCalendar } from "@/lib/menuCalendar";
 import { emptyNutrition, normalizeNutrition, sumNutrition } from "@/lib/nutrition";
 
 interface DayViewProps {
   date: Date;
   refetchTrigger?: number;
   userRole: string | null;
+  showNutrition?: boolean;
 }
 
 type CalendarDayResponse = {
@@ -73,7 +75,7 @@ function DayMealCard({ item, dayId, userRole }: DayMealCardProps) {
   const bucket = CATEGORY_TO_BUCKET[item.category];
   const dndId = `calendar-${dayId}-${bucket}-${item._id}`;
   const tagClassName = TAG_STYLES[item.category];
-  const canEditCalendar = userRole === "Admin" || userRole === "Kitchen Staff";
+  const canEditCalendar = roleCanEditCalendar(userRole);
 
   const dragData: CalendarDragData = {
     source: "calendar",
@@ -84,6 +86,7 @@ function DayMealCard({ item, dayId, userRole }: DayMealCardProps) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
     id: dndId,
     data: dragData,
+    disabled: !canEditCalendar,
   });
 
   const calories = item.nutritional_info.calories;
@@ -128,11 +131,11 @@ function DayMealCard({ item, dayId, userRole }: DayMealCardProps) {
   );
 }
 
-export default function DayView({ date, refetchTrigger, userRole }: DayViewProps) {
+export default function DayView({ date, refetchTrigger, userRole, showNutrition = false }: DayViewProps) {
   const [meals, setMeals] = useState<RecipeNutritionOnly[]>([]);
   const [nutritionTotal, setNutritionTotal] = useState<Nutrition>(emptyNutrition());
   const [isLoading, setIsLoading] = useState(true);
-  const canEditCalendar = userRole === "Admin" || userRole === "Kitchen Staff";
+  const canEditCalendar = roleCanEditCalendar(userRole);
 
   const dayId = formatDayId(date);
 
@@ -177,7 +180,7 @@ export default function DayView({ date, refetchTrigger, userRole }: DayViewProps
   return (
     <div className="flex flex-col gap-3 pt-4">
       <div className="rounded-[14px] border border-medium-gray/35 bg-white p-3">
-        <DroppableCalendarArea dayId={dayId}>
+        <DroppableCalendarArea dayId={dayId} disabled={!canEditCalendar}>
           {isLoading ? (
             <div className="flex flex-1 items-center justify-center rounded-[10px] border border-dashed border-pepper/15 bg-white/55 px-3 py-8 text-center font-montserrat text-xs font-medium text-pepper/55">
               Loading meals...
@@ -194,7 +197,7 @@ export default function DayView({ date, refetchTrigger, userRole }: DayViewProps
         </DroppableCalendarArea>
       </div>
 
-      {userRole && <DailyNutritionSummary total={nutritionTotal} />}
+      {showNutrition ? <DailyNutritionSummary total={nutritionTotal} /> : null}
     </div>
   );
 }

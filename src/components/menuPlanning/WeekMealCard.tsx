@@ -3,7 +3,8 @@
 import { GripVertical } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { CATEGORY_TO_BUCKET, TAG_STYLES, type Recipe } from "@/lib/types";
-import type { CalendarDragData } from "@/app/menuPlanning/page";
+import type { CalendarDragData } from "@/components/menuPlanning/dndTypes";
+import { canEditCalendar as roleCanEditCalendar } from "@/lib/menuCalendar";
 import RecipeSeeMorePopover from "./RecipeSeeMorePopover";
 
 export type WeekMealCardProps = {
@@ -16,7 +17,7 @@ export default function WeekMealCard({ item, dayId, userRole }: WeekMealCardProp
   const bucket = CATEGORY_TO_BUCKET[item.category];
   const dndId = `calendar-${dayId}-${bucket}-${item._id}`;
   const tagClassName = TAG_STYLES[item.category];
-  const canEditCalendar = userRole === "Admin" || userRole === "Kitchen Staff";
+  const canEditCalendar = roleCanEditCalendar(userRole);
 
   const dragData: CalendarDragData = {
     source: "calendar",
@@ -26,6 +27,7 @@ export default function WeekMealCard({ item, dayId, userRole }: WeekMealCardProp
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: dndId,
     data: dragData,
+    disabled: !canEditCalendar,
   });
 
   const calories = item.nutritional_info.calories;

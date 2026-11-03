@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider signInFallbackRedirectUrl="/" signInForceRedirectUrl="/" afterSignOutUrl="/menuPlanning">
+    <ClerkProvider signInFallbackRedirectUrl="/" signInForceRedirectUrl="/" afterSignOutUrl="/menu">
       <html lang="en" className="h-full">
         <body className="flex flex-col h-full bg-light-gray">
           <header>

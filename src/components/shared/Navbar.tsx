@@ -82,13 +82,15 @@ export default function Navbar() {
   }, [drawerOpen]);
 
   const allNavLinks = [
+    { href: "/menu", label: "Menu", publicOnly: true },
     { href: "/", label: "Dashboard", authOnly: true },
-    { href: "/menuPlanning", label: "Menu Planning" },
+    { href: "/menuPlanning", label: "Menu Planning", authOnly: true },
     { href: "/recipe", label: "Recipes" },
     { href: "/permissions", label: "Permissions", authOnly: true, adminOnly: true },
   ];
 
   const navLinks = allNavLinks
+    .filter((link) => !link.publicOnly || !isSignedIn)
     .filter((link) => !link.authOnly || isSignedIn)
     .filter((link) => !link.adminOnly || role === "Admin");
 
@@ -138,7 +140,7 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   setUserRole(null);
-                  signOut({ redirectUrl: "/menuPlanning" });
+                  signOut({ redirectUrl: "/menu" });
                 }}
                 className="w-full rounded-lg px-4 py-3 text-left text-sm font-medium text-pepper hover:bg-light-gray transition-colors"
               >
@@ -216,7 +218,7 @@ export default function Navbar() {
                   <button
                     onClick={() => {
                       setUserRole(null);
-                      signOut({ redirectUrl: "/menuPlanning" });
+                      signOut({ redirectUrl: "/menu" });
                       setDrawerOpen(false);
                       setMobileDropdownOpen(false);
                     }}

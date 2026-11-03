@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/database/db";
 import Combo from "@/database/ComboSchema";
+import { requireStaffEditor } from "@/lib/server/authz";
 import { RECIPE_BUCKETS, RecipeBuckets } from "@/lib/types";
 import { deriveComboDataFromRecipeIds, getFinalRecipeBuckets } from "@/lib/server/comboHelpers";
 
@@ -65,6 +66,9 @@ export async function GET(req: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
+  const authz = await requireStaffEditor();
+  if (!authz.ok) return authz.response;
+
   const { id } = await getRouteParams(params);
 
   if (!id) {
@@ -133,6 +137,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(req: NextRequest, { params }: Params) {
+  const authz = await requireStaffEditor();
+  if (!authz.ok) return authz.response;
+
   const { id } = await getRouteParams(params);
 
   if (!id) {

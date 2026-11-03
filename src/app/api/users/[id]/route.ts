@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/database/db";
 import User from "@/database/UserSchema";
 import { clerkClient } from "@clerk/nextjs/server";
+import { requireAdmin } from "@/lib/server/authz";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authz = await requireAdmin();
+  if (!authz.ok) return authz.response;
+
   const { id } = await params;
 
   if (!id) {
@@ -43,6 +47,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authz = await requireAdmin();
+  if (!authz.ok) return authz.response;
+
   const { id } = await params;
   if (!id) {
     return NextResponse.json({ error: "Missing Recipe ID" }, { status: 400 });

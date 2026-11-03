@@ -5,7 +5,14 @@ import { normalizeNutrition } from "@/lib/nutrition";
 // These functions are used for generating mock recipes for testing purpouses
 
 export async function seedRecipes(count: number, overrides: any = {}) {
-  const recipes = Array.from({ length: count }, () => makeRecipe(overrides));
+  const recipes = Array.from({ length: count }, () => {
+    const id = crypto.randomUUID();
+    return makeRecipe({
+      ...overrides,
+      _id: id,
+      name: overrides.name ? `${overrides.name} ${id}` : `Vegetable Soup ${id}`,
+    });
+  });
   await Recipe.insertMany(recipes);
   return recipes;
 }

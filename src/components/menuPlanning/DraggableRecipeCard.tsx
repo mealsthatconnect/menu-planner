@@ -4,7 +4,7 @@ import Image from "next/image";
 import { GripVertical } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { CATEGORY_DISPLAY_MAP, CategoryValue, Combo, Recipe, TAG_STYLES } from "@/lib/types";
-import type { SidebarDragData } from "@/app/menuPlanning/page";
+import type { SidebarDragData } from "@/components/menuPlanning/dndTypes";
 
 type DraggableRecipeCardProps = {
   item: Recipe | Combo;

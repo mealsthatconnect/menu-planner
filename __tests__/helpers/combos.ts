@@ -5,7 +5,15 @@ import { normalizeNutrition } from "@/lib/nutrition";
 // These functions are used for generating mock combos for testing purposes
 
 export async function seedCombos(count: number, overrides: any = {}) {
-  const combos = Array.from({ length: count }, () => makeCombo(overrides));
+  const combos = Array.from({ length: count }, () => {
+    const id = crypto.randomUUID();
+    const overrideName = (overrides as { name?: string }).name;
+    return makeCombo({
+      ...overrides,
+      _id: id,
+      name: overrideName ? `${overrideName} ${id}` : `Test Combo ${id}`,
+    });
+  });
   await Combo.insertMany(combos);
   return combos;
 }

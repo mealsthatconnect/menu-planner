@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import WeekMealCard from "./WeekMealCard";
 import DroppableCalendarArea from "./DroppableCalendarArea";
+import { canEditCalendar as roleCanEditCalendar } from "@/lib/menuCalendar";
 import { RECIPE_BUCKETS, Recipe, RecipeBuckets } from "@/lib/types";
 
 interface WeekViewProps {
@@ -64,6 +65,7 @@ async function fetchCalendarDayMeals(dayId: string, signal: AbortSignal): Promis
 export default function WeekView({ dateToday, weekDates, refetchTrigger, selectedDate, userRole }: WeekViewProps) {
   const [weekViewMeals, setWeekViewMeals] = useState<WeekViewDayData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const canEditCalendar = roleCanEditCalendar(userRole);
 
   const weekDayIds = weekDates.map(formatCalendarDayId);
   const weekKey = weekDayIds.join("|");
@@ -135,7 +137,7 @@ export default function WeekView({ dateToday, weekDates, refetchTrigger, selecte
                 isDaySelected && isToday ? "ring-2 ring-radish-900 ring-offset-2 ring-offset-gray-100" : ""
               }`}
             >
-              <DroppableCalendarArea dayId={dayId}>
+              <DroppableCalendarArea dayId={dayId} disabled={!canEditCalendar}>
                 {isLoading ? (
                   <div className="flex flex-1 items-center justify-center rounded-[10px] border border-dashed border-pepper/15 bg-white/55 px-3 text-center font-montserrat text-xs font-medium text-pepper/55">
                     Loading meals...
@@ -146,9 +148,7 @@ export default function WeekView({ dateToday, weekDates, refetchTrigger, selecte
                   ))
                 ) : (
                   <div className="flex flex-1 items-center justify-center text-center font-montserrat text-xs font-medium text-pepper/55">
-                    {userRole === "Admin" || userRole === "Kitchen Staff"
-                      ? "Drop recipe here"
-                      : "Meal Not Planned for the day"}
+                    {canEditCalendar ? "Drop recipe here" : "Meal Not Planned for the day"}
                   </div>
                 )}
               </DroppableCalendarArea>
