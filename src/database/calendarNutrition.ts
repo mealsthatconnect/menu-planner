@@ -3,7 +3,13 @@ import Combo from "./ComboSchema";
 import Recipe from "./RecipeSchema";
 import { RECIPE_BUCKETS } from "@/lib/types";
 import type { Nutrition, RecipeBuckets } from "@/lib/types";
-import { NutritionSummary, emptyNutrition, normalizeNutrition, sumNutrition } from "@/lib/nutrition";
+import {
+  NutritionSummary,
+  emptyNutrition,
+  hasMeaningfulNutrition,
+  normalizeNutrition,
+  sumNutrition,
+} from "@/lib/nutrition";
 
 type BucketDoc = {
   _id: string;
@@ -62,13 +68,15 @@ export async function getCalendarNutritionSummaries(dateIds: string[]): Promise<
     if (recipe) return normalizeNutrition(recipe.nutritional_info);
 
     const combo = comboById.get(itemId);
-    if (combo?.nutritional_info) return normalizeNutrition(combo.nutritional_info);
+    if (!combo) return emptyNutrition();
 
-    if (combo) {
-      return sumNutrition(getBucketIds(combo).map((recipeId) => recipeById.get(recipeId)?.nutritional_info));
+    // Wiped/default combo docs still have nutritional_info: { calories: 0, ... }.
+    // Only trust stored combo totals when at least one nutrient is non-zero.
+    if (hasMeaningfulNutrition(combo.nutritional_info)) {
+      return normalizeNutrition(combo.nutritional_info);
     }
 
-    return emptyNutrition();
+    return sumNutrition(getBucketIds(combo).map((recipeId) => recipeById.get(recipeId)?.nutritional_info));
   };
 
   return ids.map((dateId) => {

@@ -1,95 +1,99 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import mongoose from "mongoose";
+/**
+ * Destructive reset: zeroes nutritional_info on recipes/combos/calendars and
+ * drops the legacy standalone nutritions collection.
+ *
+ * Prefer scripts/migrate-nutrition.mjs when you only need to remap old fields.
+ *
+ * Usage:
+ *   node scripts/wipe-nutrition.mjs --dry-run
+ *   node scripts/wipe-nutrition.mjs
+ *   node scripts/wipe-nutrition.mjs --yes --force   # non-local URI, no prompt
+ */
+import {
+  EMPTY_NUTRITION,
+  collectionNameMap,
+  confirmAction,
+  connectMongo,
+  parseArgs,
+  redactMongoUri,
+  requireSafeMongoUri,
+  withMongoConnection,
+} from "./lib/mongo-cli.mjs";
 
-const EMPTY_NUTRITION = {
-  calories: 0,
-  protein: 0,
-  carbs: 0,
-  fat: 0,
-  saturatedFat: 0,
-  transFat: 0,
-  cholesterol: 0,
-  fiber: 0,
-  calcium: 0,
-  iron: 0,
-  sodium: 0,
-  vitaminA: 0,
-  vitaminC: 0,
-};
+function printHelp() {
+  console.log(`Usage: node scripts/wipe-nutrition.mjs [options]
 
-function loadEnv() {
-  const envPath = resolve(process.cwd(), ".env");
-  const text = readFileSync(envPath, "utf8");
+Options:
+  --dry-run   Report what would change without writing
+  --yes       Skip interactive confirmation
+  --force     Allow non-local MONGO_URI
+  --help      Show this help
 
-  for (const line of text.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-
-    const eq = trimmed.indexOf("=");
-    if (eq === -1) continue;
-
-    const key = trimmed.slice(0, eq).trim();
-    let value = trimmed.slice(eq + 1).trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      value = value.slice(1, -1);
-    }
-
-    if (!process.env[key]) process.env[key] = value;
-  }
+Safety: refuses non-local URIs unless --force. Prefer migrate-nutrition.mjs for remaps.`);
 }
 
-async function wipeCollectionNutrition(db, collectionName) {
+async function wipeCollectionNutrition(db, collectionName, { dryRun }) {
+  const count = await db.collection(collectionName).countDocuments({});
+  if (dryRun) {
+    console.log(`${collectionName}: would reset nutritional_info on ${count} document(s)`);
+    return;
+  }
+
   const result = await db.collection(collectionName).updateMany({}, { $set: { nutritional_info: EMPTY_NUTRITION } });
   console.log(`${collectionName}: reset nutritional_info on ${result.modifiedCount} document(s)`);
 }
 
 async function main() {
-  loadEnv();
-
-  const mongoUri = process.env.MONGO_URI;
-  if (!mongoUri) {
-    throw new Error("MONGO_URI is not set");
+  const args = parseArgs();
+  if (args.help) {
+    printHelp();
+    return;
   }
 
-  await mongoose.connect(mongoUri);
-  const db = mongoose.connection.db;
-  if (!db) {
-    throw new Error("Mongo connection has no database");
+  const mongoUri = await connectMongo();
+  console.log(`target: ${redactMongoUri(mongoUri)}${args.dryRun ? " (dry-run)" : ""}`);
+  await requireSafeMongoUri(mongoUri, args);
+
+  if (!args.dryRun) {
+    await confirmAction(
+      "This will ZERO nutritional_info on recipes, combos, and calendars, and DROP the nutritions collection.",
+      "WIPE",
+      args,
+    );
   }
 
-  const collectionNames = (await db.listCollections().toArray()).map((collection) => collection.name);
-  const collectionByLower = new Map(collectionNames.map((name) => [name.toLowerCase(), name]));
+  await withMongoConnection(mongoUri, async (db) => {
+    const collectionNames = (await db.listCollections().toArray()).map((collection) => collection.name);
+    const collectionByLower = collectionNameMap(collectionNames);
 
-  console.log(`collections: ${collectionNames.join(", ") || "(none)"}`);
+    console.log(`collections: ${collectionNames.join(", ") || "(none)"}`);
 
-  for (const expected of ["recipes", "combos", "calendars"]) {
-    const name = collectionByLower.get(expected);
-    if (name) {
-      await wipeCollectionNutrition(db, name);
-    } else {
-      console.log(`${expected}: collection not found, skipped`);
+    for (const expected of ["recipes", "combos", "calendars"]) {
+      const name = collectionByLower.get(expected);
+      if (name) {
+        await wipeCollectionNutrition(db, name, args);
+      } else {
+        console.log(`${expected}: collection not found, skipped`);
+      }
     }
-  }
 
-  const nutritionCollection = collectionByLower.get("nutritions");
-  if (nutritionCollection) {
-    const dropped = await db.collection(nutritionCollection).drop();
-    console.log(`${nutritionCollection}: dropped collection (${dropped})`);
-  } else {
-    console.log("nutritions: collection not found, skipped");
-  }
+    const nutritionCollection = collectionByLower.get("nutritions");
+    if (nutritionCollection) {
+      if (args.dryRun) {
+        console.log(`${nutritionCollection}: would drop collection`);
+      } else {
+        const dropped = await db.collection(nutritionCollection).drop();
+        console.log(`${nutritionCollection}: dropped collection (${dropped})`);
+      }
+    } else {
+      console.log("nutritions: collection not found, skipped");
+    }
+  });
 
-  await mongoose.disconnect();
-  console.log("Nutrition wipe complete. App goals now come from nutrition-goals.csv (Add + Stay nutrients).");
+  console.log(args.dryRun ? "Dry run complete. No changes written." : "Nutrition wipe complete.");
 }
 
-main().catch(async (error) => {
+main().catch((error) => {
   console.error(error);
-  try {
-    await mongoose.disconnect();
-  } catch {
-    // ignore disconnect errors during failure
-  }
   process.exit(1);
 });

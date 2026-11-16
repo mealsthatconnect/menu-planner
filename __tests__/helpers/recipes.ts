@@ -28,10 +28,11 @@ export function makeIngredient(overrides = {}) {
 
 export function makeRecipe(overrides: any = {}) {
   const tags = overrides.tags ?? overrides.filters ?? ["Side", "Soup", "Vegetarian"];
+  const id = overrides._id ?? crypto.randomUUID();
 
   return {
-    _id: crypto.randomUUID(),
-    name: "Vegetable Soup",
+    _id: id,
+    name: `Vegetable Soup ${id}`,
     serving: 4,
     tags,
     filters: overrides.filters ?? tags,

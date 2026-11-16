@@ -21,11 +21,12 @@ export async function seedCombos(count: number, overrides: any = {}) {
 export function makeCombo(overrides = {}) {
   return {
     _id: crypto.randomUUID(),
-    name: "Test Combo",
+    name: `Test Combo ${crypto.randomUUID()}`,
     serving: 1,
     entrees: [],
-    sides: [],
+    vegetables: [],
     fruits: [],
+    grains: [],
     filters: ["Vegetarian"],
     notes: "Test combo fixture",
     allergens: [],

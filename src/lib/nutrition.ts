@@ -1,6 +1,12 @@
-import { NUTRITION_KEYS, Nutrition, WEEKLY_NUTRITION_GOALS, ZERO_NUTRITION } from "./types";
+import { NUTRITION_KEYS, NutrientKey, Nutrition, WEEKLY_NUTRITION_GOALS, ZERO_NUTRITION } from "./types";
 
 export const EMPTY_NUTRITION: Nutrition = { ...ZERO_NUTRITION };
+
+/** Legacy Mongo field names still present on older documents. */
+export const LEGACY_NUTRITION_FIELD_MAP = {
+  fatPercentage: "fat",
+  saturatedFatPercentage: "saturatedFat",
+} as const satisfies Record<string, NutrientKey>;
 
 export const DAILY_NUTRITION_GOALS: Nutrition = {
   calories: WEEKLY_NUTRITION_GOALS.calories / 5,
@@ -23,18 +29,44 @@ export type NutritionSummary = {
   nutritional_info: Nutrition;
 };
 
+type NutritionLike = Partial<Nutrition> & Partial<Record<keyof typeof LEGACY_NUTRITION_FIELD_MAP, number>>;
+
 export function emptyNutrition(): Nutrition {
   return { ...EMPTY_NUTRITION };
 }
 
-export function normalizeNutrition(nutrition?: Partial<Nutrition> | null): Nutrition {
+function readNutrient(nutrition: NutritionLike | null | undefined, key: NutrientKey): number {
+  const current = nutrition?.[key];
+  if (current != null) {
+    return Number(current) || 0;
+  }
+
+  for (const [legacyKey, currentKey] of Object.entries(LEGACY_NUTRITION_FIELD_MAP)) {
+    if (currentKey !== key) continue;
+    const legacy = nutrition?.[legacyKey as keyof typeof LEGACY_NUTRITION_FIELD_MAP];
+    if (legacy != null) {
+      return Number(legacy) || 0;
+    }
+  }
+
+  return 0;
+}
+
+export function normalizeNutrition(nutrition?: NutritionLike | null): Nutrition {
   const result = emptyNutrition();
 
   for (const key of NUTRITION_KEYS) {
-    result[key] = Number(nutrition?.[key]) || 0;
+    result[key] = readNutrient(nutrition, key);
   }
 
   return result;
+}
+
+/** True when any nutrient is non-zero after normalization (incl. legacy aliases). */
+export function hasMeaningfulNutrition(nutrition?: NutritionLike | null): boolean {
+  if (!nutrition) return false;
+  const normalized = normalizeNutrition(nutrition);
+  return NUTRITION_KEYS.some((key) => normalized[key] !== 0);
 }
 
 export function sumNutrition(items: Array<Partial<Nutrition> | null | undefined>): Nutrition {

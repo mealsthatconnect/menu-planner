@@ -20,33 +20,13 @@ export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
   const mobileDropdownRef = useRef<HTMLDivElement>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
 
+  // Sync user to DB on sign-in and fetch their role
   useEffect(() => {
     if (!isSignedIn) {
-      setUserRole(null);
+      setRole(null);
       return;
     }
-
-    async function getUserRole() {
-      try {
-        const response = await fetch("/api/users/me");
-        if (response.ok) {
-          const data = await response.json();
-          setUserRole(data.role);
-        } else {
-          console.error("Failed to fetch user role");
-        }
-      } catch (error) {
-        setUserRole(null);
-      }
-    }
-    getUserRole();
-  }, [isSignedIn]);
-
-  // cync user to DB on sign-in and fetch their role
-  useEffect(() => {
-    if (!isSignedIn) return;
 
     const syncAndFetch = async () => {
       await fetch("/api/users/sync", { method: "POST" });
@@ -139,7 +119,7 @@ export default function Navbar() {
             <div className="absolute right-0 mt-2 w-40 rounded-lg border border-medium-gray bg-white shadow-md z-50">
               <button
                 onClick={() => {
-                  setUserRole(null);
+                  setRole(null);
                   signOut({ redirectUrl: "/menu" });
                 }}
                 className="w-full rounded-lg px-4 py-3 text-left text-sm font-medium text-pepper hover:bg-light-gray transition-colors"
@@ -217,7 +197,7 @@ export default function Navbar() {
                 <div className="absolute bottom-20 mt-2 w-20 rounded-lg border border-medium-gray bg-white shadow-md z-50">
                   <button
                     onClick={() => {
-                      setUserRole(null);
+                      setRole(null);
                       signOut({ redirectUrl: "/menu" });
                       setDrawerOpen(false);
                       setMobileDropdownOpen(false);
