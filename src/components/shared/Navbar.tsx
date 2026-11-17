@@ -13,6 +13,8 @@ export default function Navbar() {
   const { signOut } = useClerk();
   const { isSignedIn, user } = useUser();
 
+  // Defer auth-dependent UI until after mount so SSR and hydration match.
+  const [hasMounted, setHasMounted] = useState(false);
   const [role, setRole] = useState<UserRole | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -21,9 +23,15 @@ export default function Navbar() {
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
   const mobileDropdownRef = useRef<HTMLDivElement>(null);
 
+  const signedIn = hasMounted && Boolean(isSignedIn);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   // Sync user to DB on sign-in and fetch their role
   useEffect(() => {
-    if (!isSignedIn) {
+    if (!signedIn) {
       setRole(null);
       return;
     }
@@ -38,7 +46,7 @@ export default function Navbar() {
     };
 
     syncAndFetch();
-  }, [isSignedIn]);
+  }, [signedIn]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -70,8 +78,8 @@ export default function Navbar() {
   ];
 
   const navLinks = allNavLinks
-    .filter((link) => !link.publicOnly || !isSignedIn)
-    .filter((link) => !link.authOnly || isSignedIn)
+    .filter((link) => !link.publicOnly || !signedIn)
+    .filter((link) => !link.authOnly || signedIn)
     .filter((link) => !link.adminOnly || role === "Admin");
 
   const displayName = user?.firstName
@@ -98,7 +106,7 @@ export default function Navbar() {
         ))}
       </div>
 
-      {isSignedIn ? (
+      {signedIn ? (
         <div className="relative hidden md:block" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
@@ -171,7 +179,7 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {isSignedIn ? (
+          {signedIn ? (
             <div className="mt-auto flex flex-col gap-2" ref={mobileDropdownRef}>
               <button
                 onClick={() => setMobileDropdownOpen((prev) => !prev)}
