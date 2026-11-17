@@ -1,7 +1,11 @@
 import User from "@/database/UserSchema";
+import { requireAdmin } from "@/lib/server/authz";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
+  const authz = await requireAdmin();
+  if (!authz.ok) return authz.response;
+
   try {
     const searchParams = req.nextUrl.searchParams;
 

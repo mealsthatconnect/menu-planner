@@ -4,7 +4,8 @@ import { GripVertical } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { CATEGORY_TO_BUCKET, TAG_STYLES } from "@/lib/types";
 import type { RecipeNutritionOnly } from "@/lib/types";
-import type { CalendarDragData } from "@/app/menuPlanning/page";
+import type { CalendarDragData } from "@/components/menuPlanning/dndTypes";
+import { canEditCalendar as roleCanEditCalendar } from "@/lib/menuCalendar";
 import RecipeSeeMorePopover from "./RecipeSeeMorePopover";
 
 type MonthMealCardProps = {
@@ -46,7 +47,7 @@ export default function MonthMealCard({ item, dayId, variant = "card", userRole 
   const dndId = `calendar-${variant}-${dayId}-${bucket}-${item._id}`;
   const barClassName = MONTH_BAR_STYLES[item.category];
   const tagClassName = TAG_STYLES[item.category];
-  const canEditCalendar = userRole === "Admin" || userRole === "Kitchen Staff";
+  const canEditCalendar = roleCanEditCalendar(userRole);
 
   const dragData: CalendarDragData = {
     source: "calendar",
@@ -57,6 +58,7 @@ export default function MonthMealCard({ item, dayId, variant = "card", userRole 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: dndId,
     data: dragData,
+    disabled: !canEditCalendar,
   });
 
   if (variant === "bar") {

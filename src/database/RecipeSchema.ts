@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import Ingredient from "./IngredientSchema";
-import Nutrition from "./NutritionSchema";
+import NutritionSchema from "./NutritionSchema";
 import { PROTEIN_SOURCES, RECIPE_CATEGORIES } from "@/lib/types";
 
 const RecipeSchema = new Schema(
@@ -79,7 +79,7 @@ const RecipeSchema = new Schema(
     lastVerified: { type: Date, required: false },
     verifiedBy: { type: String, required: false },
     isDraft: { type: Boolean, required: true, default: true },
-    nutritional_info: { type: Nutrition.schema, required: true, default: () => ({}) },
+    nutritional_info: { type: NutritionSchema, required: true, default: () => ({}) },
   },
   {
     timestamps: true,

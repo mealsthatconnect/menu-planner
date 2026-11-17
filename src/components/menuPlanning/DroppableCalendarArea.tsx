@@ -1,5 +1,6 @@
 "use client";
-import type { DropZoneData } from "@/app/menuPlanning/page";
+
+import type { DropZoneData } from "@/components/menuPlanning/dndTypes";
 import { useDroppable } from "@dnd-kit/core";
 import { ReactNode } from "react";
 
@@ -8,9 +9,16 @@ interface DroppableCalendarAreaProps {
   children: ReactNode;
   className?: string;
   droppableId?: string;
+  disabled?: boolean;
 }
-// TODO: figure out how this looks and if I can reuse it
-export default function DroppableCalendarArea({ dayId, children, className, droppableId }: DroppableCalendarAreaProps) {
+
+export default function DroppableCalendarArea({
+  dayId,
+  children,
+  className,
+  droppableId,
+  disabled = false,
+}: DroppableCalendarAreaProps) {
   const dropData: DropZoneData = {
     dest: "calendar",
     dayId,
@@ -18,6 +26,7 @@ export default function DroppableCalendarArea({ dayId, children, className, drop
   const { setNodeRef, isOver } = useDroppable({
     id: droppableId ?? `droppable-${dayId}`,
     data: dropData,
+    disabled,
   });
   const defaultClassName =
     "flex h-full w-full flex-1 flex-row flex-wrap content-start gap-2 rounded-[10px] p-2 transition-colors md:flex-col md:flex-nowrap md:p-4";
@@ -25,9 +34,9 @@ export default function DroppableCalendarArea({ dayId, children, className, drop
 
   return (
     <div
-      ref={setNodeRef}
+      ref={disabled ? undefined : setNodeRef}
       className={`${className ?? defaultClassName} ${
-        isOver ? overClassName : className ? "" : "border border-medium-gray/20 bg-white/30"
+        !disabled && isOver ? overClassName : className ? "" : "border border-medium-gray/20 bg-white/30"
       }`}
     >
       {children}

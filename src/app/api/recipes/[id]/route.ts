@@ -3,6 +3,7 @@ import connectDB, { getRecipeById } from "@/database/db";
 import Recipe from "@/database/RecipeSchema";
 import { RECIPE_CATEGORIES } from "@/lib/types";
 import type { RecipeCategory } from "@/lib/types";
+import { requireStaffEditor } from "@/lib/server/authz";
 import { refreshCombosContainingRecipe, updateAffectsComboData } from "@/lib/server/comboHelpers";
 
 type Params = {
@@ -39,6 +40,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
+  const authz = await requireStaffEditor();
+  if (!authz.ok) return authz.response;
+
   const { id } = await getRouteParams(params);
 
   if (!id) {
@@ -90,6 +94,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
+  const authz = await requireStaffEditor();
+  if (!authz.ok) return authz.response;
+
   const { id } = await getRouteParams(params);
 
   if (!id) {

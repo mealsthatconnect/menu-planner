@@ -4,6 +4,7 @@ import "@/database/RecipeSchema";
 import Calendar from "@/database/CalendarSchema";
 import { getCalendarNutritionSummaries } from "@/database/calendarNutrition";
 import { normalizeNutrition } from "@/lib/nutrition";
+import { requireStaffEditor } from "@/lib/server/authz";
 import { RECIPE_BUCKETS } from "@/lib/types";
 import type { Nutrition, RecipeBucket, RecipeBuckets, RecipeCategory } from "@/lib/types";
 
@@ -23,7 +24,6 @@ type CalendarRecipePreview = {
 type CalendarDayResponse = {
   _id: string;
   nutritional_info: Nutrition;
-  quotaMet: boolean;
 } & RecipeBuckets<CalendarRecipePreview>;
 
 const populateBucketPaths = RECIPE_BUCKETS.map((bucket) => ({
@@ -71,7 +71,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
       {
         ...calendarDay,
         nutritional_info: nutritionSummary?.nutritional_info ?? normalizeNutrition(calendarDay.nutritional_info),
-        quotaMet: nutritionSummary?.quotaMet ?? false,
       },
       { status: 200 },
     );
@@ -82,6 +81,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function POST(req: NextRequest, { params }: Params) {
+  const authz = await requireStaffEditor();
+  if (!authz.ok) return authz.response;
+
   const { id } = await getRouteParams(params);
 
   if (!id) {
@@ -118,6 +120,9 @@ export async function POST(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(req: NextRequest, { params }: Params) {
+  const authz = await requireStaffEditor();
+  if (!authz.ok) return authz.response;
+
   const { id } = await getRouteParams(params);
 
   if (!id) {

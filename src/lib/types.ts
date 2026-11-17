@@ -21,23 +21,27 @@ export type SubrecipeIngredient = {
 export type Nutrition = {
   calories: number;
   protein: number;
-  fatPercentage: number;
-  saturatedFatPercentage: number;
+  carbs: number;
+  fat: number;
+  saturatedFat: number;
+  transFat: number;
+  cholesterol: number;
   fiber: number;
   calcium: number;
-  magnesium: number;
-  potassium: number;
+  iron: number;
   sodium: number;
   vitaminA: number;
-  vitaminD: number;
   vitaminC: number;
-  vitaminB12: number;
 };
 
+export type NutrientKey = keyof Nutrition;
+
 export type NutrientDisplay = {
-  key: keyof Nutrition;
+  key: NutrientKey;
   label: string;
   unit: string;
+  /** CSV Quota? = Yes: show current vs max as a reference, not a pass/fail gate. */
+  isQuotaReference: boolean;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -47,50 +51,53 @@ export type NutrientDisplay = {
 export const ZERO_NUTRITION: Nutrition = {
   calories: 0,
   protein: 0,
-  fatPercentage: 0,
-  saturatedFatPercentage: 0,
+  carbs: 0,
+  fat: 0,
+  saturatedFat: 0,
+  transFat: 0,
+  cholesterol: 0,
   fiber: 0,
   calcium: 0,
-  magnesium: 0,
-  potassium: 0,
+  iron: 0,
   sodium: 0,
   vitaminA: 0,
-  vitaminD: 0,
   vitaminC: 0,
-  vitaminB12: 0,
 };
 
-export const WEEKLY_NUTRITION_QUOTA: Nutrition = {
+// Weekly reference maxima from project-docs/nutrition-goals.csv (Status = Add or Stay).
+export const WEEKLY_NUTRITION_GOALS: Nutrition = {
   calories: 3000,
   protein: 75,
-  fatPercentage: 137.5,
-  saturatedFatPercentage: 50,
+  carbs: 225,
+  fat: 51,
+  saturatedFat: 16,
+  transFat: 2,
+  cholesterol: 300,
   fiber: 35,
   calcium: 2000,
-  magnesium: 525,
-  potassium: 4300,
+  iron: 8,
   sodium: 3800,
   vitaminA: 1165,
-  vitaminD: 1000,
   vitaminC: 125,
-  vitaminB12: 4,
 };
 
 export const NUTRIENT_LABELS = [
-  { key: "calories", label: "Calories", unit: "kcal" },
-  { key: "protein", label: "Protein", unit: "g" },
-  { key: "fatPercentage", label: "Fat %", unit: "%" },
-  { key: "saturatedFatPercentage", label: "Sat. Fat %", unit: "%" },
-  { key: "fiber", label: "Fiber", unit: "g" },
-  { key: "calcium", label: "Calcium", unit: "mg" },
-  { key: "magnesium", label: "Magnesium", unit: "mg" },
-  { key: "potassium", label: "Potassium", unit: "mg" },
-  { key: "sodium", label: "Sodium", unit: "mg" },
-  { key: "vitaminA", label: "Vitamin A", unit: "mcg" },
-  { key: "vitaminD", label: "Vitamin D", unit: "IU" },
-  { key: "vitaminC", label: "Vitamin C", unit: "mg" },
-  { key: "vitaminB12", label: "Vitamin B12", unit: "μg" },
+  { key: "calories", label: "Calories", unit: "kcal", isQuotaReference: true },
+  { key: "protein", label: "Protein", unit: "g", isQuotaReference: true },
+  { key: "carbs", label: "Carbs", unit: "g", isQuotaReference: false },
+  { key: "fat", label: "Fat", unit: "g", isQuotaReference: false },
+  { key: "saturatedFat", label: "Sat. Fat", unit: "g", isQuotaReference: false },
+  { key: "transFat", label: "Trans Fat", unit: "g", isQuotaReference: false },
+  { key: "cholesterol", label: "Cholesterol", unit: "mg", isQuotaReference: false },
+  { key: "fiber", label: "Fiber", unit: "g", isQuotaReference: true },
+  { key: "calcium", label: "Calcium", unit: "mg", isQuotaReference: true },
+  { key: "iron", label: "Iron", unit: "mg", isQuotaReference: false },
+  { key: "sodium", label: "Sodium", unit: "mg", isQuotaReference: false },
+  { key: "vitaminA", label: "Vitamin A", unit: "mcg", isQuotaReference: true },
+  { key: "vitaminC", label: "Vitamin C", unit: "mg", isQuotaReference: true },
 ] satisfies NutrientDisplay[];
+
+export const NUTRITION_KEYS = NUTRIENT_LABELS.map(({ key }) => key);
 
 /* -------------------------------------------------------------------------- */
 /* Recipe categories and buckets                                              */

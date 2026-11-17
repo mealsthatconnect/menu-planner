@@ -6,7 +6,7 @@ import type { Nutrition, RecipeBuckets } from "@/lib/types";
 import {
   NutritionSummary,
   emptyNutrition,
-  isNutritionQuotaMet,
+  hasMeaningfulNutrition,
   normalizeNutrition,
   sumNutrition,
 } from "@/lib/nutrition";
@@ -68,13 +68,15 @@ export async function getCalendarNutritionSummaries(dateIds: string[]): Promise<
     if (recipe) return normalizeNutrition(recipe.nutritional_info);
 
     const combo = comboById.get(itemId);
-    if (combo?.nutritional_info) return normalizeNutrition(combo.nutritional_info);
+    if (!combo) return emptyNutrition();
 
-    if (combo) {
-      return sumNutrition(getBucketIds(combo).map((recipeId) => recipeById.get(recipeId)?.nutritional_info));
+    // Wiped/default combo docs still have nutritional_info: { calories: 0, ... }.
+    // Only trust stored combo totals when at least one nutrient is non-zero.
+    if (hasMeaningfulNutrition(combo.nutritional_info)) {
+      return normalizeNutrition(combo.nutritional_info);
     }
 
-    return emptyNutrition();
+    return sumNutrition(getBucketIds(combo).map((recipeId) => recipeById.get(recipeId)?.nutritional_info));
   };
 
   return ids.map((dateId) => {
@@ -83,7 +85,6 @@ export async function getCalendarNutritionSummaries(dateIds: string[]): Promise<
     return {
       _id: dateId,
       nutritional_info: total,
-      quotaMet: isNutritionQuotaMet(total),
     };
   });
 }

@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react";
 import WeekMealCard from "./WeekMealCard";
-import NutritionInfoNotMetCard from "./NutritionInfoNotMetCard";
 import DroppableCalendarArea from "./DroppableCalendarArea";
-import type { NutritionSummary } from "@/lib/nutrition";
+import { canEditCalendar as roleCanEditCalendar } from "@/lib/menuCalendar";
 import { RECIPE_BUCKETS, Recipe, RecipeBuckets } from "@/lib/types";
 
 interface WeekViewProps {
   dateToday: Date;
   weekDates: Date[];
   refetchTrigger?: number;
-  nutritionByDate?: Record<string, NutritionSummary>;
   selectedDate: Date | null;
   userRole: string | null;
 }
@@ -22,7 +20,6 @@ function isSameCalendarDay(a: Date, b: Date): boolean {
 
 type WeekViewDayData = {
   meals: Recipe[];
-  showNutritionInfoNotMet?: boolean;
 };
 
 type CalendarDayResponse = {
@@ -31,7 +28,6 @@ type CalendarDayResponse = {
 
 const EMPTY_DAY: WeekViewDayData = {
   meals: [],
-  showNutritionInfoNotMet: false,
 };
 
 function formatCalendarDayId(date: Date) {
@@ -52,7 +48,6 @@ async function fetchCalendarDayMeals(dayId: string, signal: AbortSignal): Promis
   if (response.status === 404) {
     return {
       meals: [],
-      showNutritionInfoNotMet: true,
     };
   }
 
@@ -64,20 +59,13 @@ async function fetchCalendarDayMeals(dayId: string, signal: AbortSignal): Promis
 
   return {
     meals: mapCalendarDayToMeals(calendarDay),
-    showNutritionInfoNotMet: false,
   };
 }
 
-export default function WeekView({
-  dateToday,
-  weekDates,
-  refetchTrigger,
-  nutritionByDate = {},
-  selectedDate,
-  userRole,
-}: WeekViewProps) {
+export default function WeekView({ dateToday, weekDates, refetchTrigger, selectedDate, userRole }: WeekViewProps) {
   const [weekViewMeals, setWeekViewMeals] = useState<WeekViewDayData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const canEditCalendar = roleCanEditCalendar(userRole);
 
   const weekDayIds = weekDates.map(formatCalendarDayId);
   const weekKey = weekDayIds.join("|");
@@ -123,8 +111,6 @@ export default function WeekView({
         const dayId = weekDayIds[index] ?? formatCalendarDayId(date);
         const dayData = weekViewMeals[index] ?? EMPTY_DAY;
         const isToday = date.toDateString() === dateToday.toDateString();
-        const nutritionSummary = nutritionByDate[dayId];
-        const showNutritionWarning = nutritionSummary ? !nutritionSummary.quotaMet : dayData.showNutritionInfoNotMet;
         const isDaySelected = selectedDate ? isSameCalendarDay(date, selectedDate) : false;
 
         return (
@@ -151,7 +137,7 @@ export default function WeekView({
                 isDaySelected && isToday ? "ring-2 ring-radish-900 ring-offset-2 ring-offset-gray-100" : ""
               }`}
             >
-              <DroppableCalendarArea dayId={dayId}>
+              <DroppableCalendarArea dayId={dayId} disabled={!canEditCalendar}>
                 {isLoading ? (
                   <div className="flex flex-1 items-center justify-center rounded-[10px] border border-dashed border-pepper/15 bg-white/55 px-3 text-center font-montserrat text-xs font-medium text-pepper/55">
                     Loading meals...
@@ -162,14 +148,10 @@ export default function WeekView({
                   ))
                 ) : (
                   <div className="flex flex-1 items-center justify-center text-center font-montserrat text-xs font-medium text-pepper/55">
-                    {userRole === "Admin" || userRole === "Kitchen Staff"
-                      ? "Drop recipe here"
-                      : "Meal Not Planned for the day"}
+                    {canEditCalendar ? "Drop recipe here" : "Meal Not Planned for the day"}
                   </div>
                 )}
               </DroppableCalendarArea>
-
-              {!isLoading && userRole && showNutritionWarning ? <NutritionInfoNotMetCard /> : null}
             </div>
           </div>
         );

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/database/db";
 import Combo from "@/database/ComboSchema";
+import { requireStaffEditor } from "@/lib/server/authz";
 import { getNormalizedParams } from "@/lib/server/searchParams";
 import { DIETARY_KEYS, EXCLUSION_KEYS, PROTEIN_SOURCES, RECIPE_BUCKETS } from "@/lib/types";
 import {
@@ -172,6 +173,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const authz = await requireStaffEditor();
+  if (!authz.ok) return authz.response;
+
   let comboData: Record<string, unknown>;
 
   try {

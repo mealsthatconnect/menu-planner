@@ -1,0 +1,83 @@
+import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
+import { ListFilter } from "lucide-react";
+import { SORT_OPTIONS, SortOption } from "@/lib/types";
+
+function RecipeMenuItem({
+  type,
+  onSelect,
+  isSelected,
+}: {
+  type: { value: SortOption; label: string };
+  onSelect: (type: SortOption) => void;
+  isSelected?: boolean;
+}) {
+  return (
+    <MenuItem>
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          onSelect(type.value);
+        }}
+        className="flex w-full items-center gap-3 px-4 py-2 text-base font-montserrat font-medium text-black"
+      >
+        <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 border-radish-900`}>
+          {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-radish-900" />}
+        </div>
+        {type.label}
+      </button>
+    </MenuItem>
+  );
+}
+
+export default function SortPermissionsButton({
+  align = "right",
+  activeType = "createdDate",
+  onSortChange,
+}: {
+  align?: "left" | "right";
+  activeType: SortOption;
+  onSortChange: (filterId: SortOption) => void;
+}) {
+  const isRight = align === "right";
+
+  return (
+    <>
+      <Menu as="div" className="relative shrink-0">
+        <MenuButton className="w-fit h-10 bg-medium-gray rounded-lg flex items-center justify-center p-2.5">
+          <ListFilter className="text-pepper" />
+        </MenuButton>
+        <MenuItems
+          transition
+          className={`absolute z-50 mt-4.5 w-48
+                    ${isRight ? "right-0 origin-top-right" : "left-0 origin-top-left"}
+                    data-closed:scale-95 data-closed:opacity-0
+                    rounded-lg bg-white drop-shadow-sm drop-shadow-black/50
+                    data-enter:duration-100 data-leave:duration-75
+
+                    before:absolute before:content-['']
+                    before:-top-4.5
+                    before:h-5 before:w-6
+                    before:bg-white
+                    before:[clip-path:polygon(50%_0%,0%_100%,100%_100%)]
+                    before:z-10
+                    ${isRight ? "before:right-4" : "before:left-4"}
+                    `}
+        >
+          <div className="px-4 py-2 font-montserrat font-bold text-pepper">Sort by:</div>
+          <div className="relative">
+            {SORT_OPTIONS.map((type, index) => (
+              <div key={type.value}>
+                <RecipeMenuItem
+                  key={type.value}
+                  type={type}
+                  onSelect={onSortChange}
+                  isSelected={type.value === activeType}
+                />
+              </div>
+            ))}
+          </div>
+        </MenuItems>
+      </Menu>
+    </>
+  );
+}
